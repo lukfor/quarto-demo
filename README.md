@@ -27,10 +27,15 @@ Make sure you have [Micromamba](https://mamba.readthedocs.io/en/latest/micromamb
 
 ```bash
 micromamba create -f environment.yaml
+````
+
+### 2. Activate Environment
+
+```bash
 micromamba activate quarto-demo
 ````
 
-### 2. Render the Report
+### 3. Render the Report
 
 After activating the environment:
 
