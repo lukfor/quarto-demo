@@ -1,0 +1,98 @@
+---
+title: "VCF File Cleaning Protocoll"
+format: html
+engine: knitr
+---
+
+::: {.callout-note}
+## Execution Information
+
+- **Date**: `r Sys.Date()`
+- **Username**: `r Sys.info()["user"]`
+- **Machine**: `r Sys.info()["nodename"]`
+:::
+
+## 🔧 Step 1: Validate VCF File
+
+```{bash}
+INPUT='data/genotypes.vcf.gz'
+mkdir -p output
+md5sum "$INPUT" | tee output/00-input.md5
+```
+
+
+## 🧼 Step 2: Filter Variants by Quality using `bcftools`
+
+Filter variants with a minimum QUAL score of 30 and remove low-quality genotypes (e.g., GQ < 20).
+
+```{bash}
+INPUT='data/genotypes.vcf.gz'
+bcftools view -e 'GT="./."' "$INPUT" -Oz -o output/01-nomissing.vcf.gz
+```
+
+Then index the result:
+
+```{bash}
+bcftools index output/01-nomissing.vcf.gz
+```
+
+
+
+## 🚫 Step 3: Remove Indels
+
+Some analyses may require only SNPs.
+
+```{bash}
+bcftools view -v snps output/01-nomissing.vcf.gz -Oz -o output/02-snps_only.vcf.gz
+bcftools index output/02-snps_only.vcf.gz
+```
+
+
+
+## ✅ Step 4: Convert VCF to PLINK2 Format
+
+You can convert a cleaned VCF to PLINK2 format for downstream QC or GWAS:
+
+```{bash}
+plink2 --vcf output/02-snps_only.vcf.gz --chr 1-22 --make-bed --out output/03-data_cleaned
+```
+
+This generates `.pgen`, `.pvar`, and `.psam` files.
+
+
+
+## 🧽 Step 5: Further Filtering with PLINK2
+
+Filter individuals or variants with too much missingness:
+
+```{bash}
+plink2 --bfile output/03-data_cleaned --geno 0.05 --mind 0.1 --make-bed --out output/04-qc_filtered
+```
+
+* `--geno 0.05`: remove variants with >5% missing
+* `--mind 0.1`: remove individuals with >10% missing
+
+
+
+## 📉 Step 6: MAF and HWE Filters
+
+Apply allele frequency and Hardy-Weinberg Equilibrium filters:
+
+```{bash}
+plink2 --bfile output/04-qc_filtered --maf 0.01 --hwe 1e-6 --make-bed --out output/05-final_data
+```
+
+
+
+## 👨🏻‍💻 Summary
+
+Statistics about the final dataset:
+
+```{bash}
+plink2 --bfile output/05-final_data --validate | grep -E "samples|variants"
+```
+
+Checksums:
+```{bash}
+md5sum output/05-final_data.* | tee output/00-input.md5
+```

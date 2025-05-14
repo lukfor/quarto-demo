@@ -1,0 +1,9 @@
+name: quarto-demo
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - quarto=1.7.30
+  - r-rmarkdown=2.29
+  - plink2=2.0.0a.6.9
+  - bcftools=1.21
