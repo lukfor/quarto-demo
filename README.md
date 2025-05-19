@@ -43,6 +43,18 @@ This will produce a file named `report.html` in the same directory.
 You can open the report in any modern web browser.
 
 
+### 3. Render the Report with parameters
+
+After activating the environment:
+
+```bash
+quarto render report-with-params.qmd -P input=myfile.vcf.gz
+```
+
+This will produce a file named `report-with-params.html` in the same directory.
+
+You can open the report in any modern web browser.
+
 ## 📦 Requirements
 
 All required packages are listed in `environment.yaml`. Key tools include:
